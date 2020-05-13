@@ -32,7 +32,7 @@ int main()
     //绑定信息
     cliAddr.sin_family = AF_INET; /* 协议类型是INET */
     cliAddr.sin_port = htons(2048); /* 己方端口 */
-    cliAddr.sin_addr.s_addr = inet_addr(argv2); /* 己方IP */
+    cliAddr.sin_addr.s_addr = INADDR_ANY; //不指定连接地址
     if (bind(sockfd, (struct sockaddr *)&cliAddr, addrlen)== -1) //绑定IP地址、端口号等
     {
         //bind失败，退出程序
@@ -42,10 +42,37 @@ int main()
         exit(1);
     }
 
-    //连接对方
+    //指定目标地址
     svrAddr.sin_family = AF_INET; /* 协议类型是INET */
     svrAddr.sin_port = htons(port); /* 连接对方端口 */
     svrAddr.sin_addr.s_addr = inet_addr(argv); /* 连接对方的IP */
+
+    //发送数据
+    printf("please input: \n");
+    scanf("%s",msg);
+    if (sendto(sockfd, msg, maxDataSize, 0, (struct sockaddr* )&svrAddr, addrlen) == -1)
+    {
+        //如果发送失败，退出程序
+        printf("sendto error\n");
+        closesocket(sockfd);
+        WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
+        exit(1);
+    }
+    
+    //接收数据，为服务端新建专为数据交互使用的sockfd
+    if ((numbytes=recvfrom(sockfd, buf, maxDataSize, 0, (struct sockaddr *)&svrAddr, &addrlen)) == -1)
+    {
+        //recvfrom失败,退出
+        printf("recvfrom error\n");
+        closesocket(sockfd);
+        WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
+        exit(1);
+    }
+     //printf("%s\n",buf);
+    printf("Received: %s",buf);
+     
+
+    //为套接字绑定目标地址
     if (connect(sockfd, (struct sockaddr *)&svrAddr,addrlen) == -1)
     {
         //如果连接失败，退出程序
@@ -54,8 +81,8 @@ int main()
         WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
         exit(1);
     }
-    printf("connected!\n");
 
+    printf("connected!\n");
     while(1)
     {
         scanf("%s",msg);
@@ -67,7 +94,7 @@ int main()
             WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
             exit(1);
         }
-        printf("sent!\n");
+        //printf("sent!\n");
         //接收数据,并打印出来
         if ((numbytes=recv(sockfd, buf,maxDataSize, 0)) == -1)
         {
@@ -77,8 +104,8 @@ int main()
             WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
             exit(1);
         }
-        buf[numbytes] = '\0';
-        printf("Received: %s",buf); 
+        //buf[numbytes] = '\0';
+        printf("Received: %s",buf);
     }
     closesocket(sockfd);
     return 0;

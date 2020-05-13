@@ -28,7 +28,7 @@ int main()
 
     //bind本机的MYPORT端口
     svrAddr.sin_family = AF_INET; /* 协议类型是INET */
-    svrAddr.sin_port = htons(myPort); /* 绑定MYPORT端口*/
+    svrAddr.sin_port = htons(myPort); /* 绑定myPort端口*/
     svrAddr.sin_addr.s_addr = INADDR_ANY; //0.0.0.0 即在所有IP地址进行侦听
     if (bind(srv_sd, (struct sockaddr *)&svrAddr, addrlen)== -1) //绑定IP地址、端口号等
     {
@@ -50,8 +50,7 @@ int main()
         WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
         exit(1);
     }
-    printf("client IPAddr = %s, Port = %d, buf = %s\n", inet_ntoa(cliAddr.sin_addr), ntohs(cliAddr.sin_port), buf);
-    printf("received!\n");
+    printf("client IPAddr = %s, Port = %d\n", inet_ntoa(cliAddr.sin_addr), ntohs(cliAddr.sin_port));
 
     //创建与客户端数据交互的套接字
     if ((cli_sd = socket(AF_INET, SOCK_DGRAM, 0)) == -1)// IPv4 UDP 一般为0
@@ -65,8 +64,7 @@ int main()
      //为新套接字绑定地址信息
     svrAddr.sin_family = AF_INET; /* 协议类型是INET */
     svrAddr.sin_port = htons(2222);//分配一个连接端口
-    svrAddr.sin_addr.s_addr = 0;//不指定连接地址
-
+    svrAddr.sin_addr.s_addr = INADDR_ANY;//不指定连接地址
     if (bind(cli_sd, (struct sockaddr *)&svrAddr, addrlen)== -1) //绑定IP地址、端口号等
     {
         //bind失败，退出程序
@@ -87,8 +85,9 @@ int main()
         WSACleanup();//解除与Socket库的绑定并且释放Socket库所占用的系统资源
         exit(1);
     }
-    printf("connected!\n");
 
+    //回复数据
+    printf("%s %d\n",buf,strlen(buf));
     sprintf(msg,"%d\n",strlen(buf));
     if (send(cli_sd,msg,maxDataSize, 0) == -1)
     {
